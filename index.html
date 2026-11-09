@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101513">
+    <title>Pong / Court 01</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #101513;
+        --paper: #e9eee4;
+        --muted: #9aa79d;
+        --line: #36413a;
+        --lime: #d3f36b;
+        --coral: #ff765e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 28px clamp(16px, 5vw, 72px) 24px;
+        background-color: var(--ink);
+        background-image: radial-gradient(#38423a 0.7px, transparent 0.7px);
+        background-size: 18px 18px;
+        color: var(--paper);
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      main {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+      }
+
+      .topline, .bottomline, .scoreboard, .player-labels {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .topline {
+        min-height: 42px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font: 11px "DM Mono", monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand { color: var(--paper); font-weight: 500; }
+      .live { display: inline-flex; align-items: center; gap: 8px; }
+      .live::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--lime);
+        content: "";
+        box-shadow: 0 0 12px #d3f36b88;
+      }
+
+      .scoreboard {
+        max-width: 470px;
+        margin: 38px auto 22px;
+        gap: 24px;
+      }
+
+      .score {
+        min-width: 70px;
+        color: var(--paper);
+        font-size: clamp(44px, 8vw, 76px);
+        font-weight: 500;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+      }
+
+      .score:first-child { color: var(--lime); }
+      .score:last-child { color: var(--coral); }
+      .score-divider { color: #647168; font: 18px "DM Mono", monospace; }
+
+      .player-labels {
+        max-width: 470px;
+        margin: 0 auto 12px;
+        color: var(--muted);
+        font: 10px "DM Mono", monospace;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .player-labels span:first-child { color: var(--lime); }
+      .player-labels span:last-child { color: var(--coral); }
+
+      .court-wrap {
+        overflow: hidden;
+        border: 1px solid #718076;
+        background: #27352d;
+        box-shadow: 0 20px 70px #0005;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        aspect-ratio: 8 / 5;
+        touch-action: none;
+      }
+
+      .bottomline {
+        min-height: 54px;
+        gap: 14px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font: 10px "DM Mono", monospace;
+        letter-spacing: 0.04em;
+      }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 18px; }
+      .control { display: inline-flex; align-items: center; gap: 8px; }
+      kbd {
+        padding: 3px 5px;
+        border: 1px solid #526057;
+        border-radius: 3px;
+        color: var(--paper);
+        font: inherit;
+      }
+
+      button {
+        padding: 8px 11px;
+        border: 1px solid #526057;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--paper);
+        font: 11px "DM Mono", monospace;
+        cursor: pointer;
+      }
+
+      button:hover, button:focus-visible { border-color: var(--lime); color: var(--lime); }
+      button:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+
+      @media (max-width: 600px) {
+        body { padding: 18px 12px; }
+        .scoreboard { margin-top: 28px; }
+        .bottomline { align-items: flex-start; padding: 12px 0; }
+        .controls { gap: 8px 14px; }
+        .control { gap: 5px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="topline">
+        <span class="brand">Pong / Court 01</span>
+        <span class="live">Live match</span>
+      </header>
+
+      <section class="scoreboard" aria-label="Score">
+        <output class="score" id="left-score" aria-label="Player one score">0</output>
+        <span class="score-divider">:</span>
+        <output class="score" id="right-score" aria-label="Player two score">0</output>
+      </section>
+      <div class="player-labels" aria-hidden="true">
+        <span>01 / Left</span><span>Right / 02</span>
+      </div>
+
+      <div class="court-wrap">
+        <canvas id="court" width="800" height="500" aria-label="Pong court. Player one uses W and S; player two uses the up and down arrow keys."></canvas>
+      </div>
+
+      <footer class="bottomline">
+        <div class="controls">
+          <span class="control"><span>LEFT</span><kbd>W</kbd><kbd>S</kbd></span>
+          <span class="control"><span>RIGHT</span><kbd>↑</kbd><kbd>↓</kbd></span>
+          <span class="control"><span>TOUCH</span><span>Move on your half</span></span>
+        </div>
+        <button id="reset" type="button">Reset match</button>
+      </footer>
+    </main>
+
+    <script>
+      const canvas = document.querySelector("#court");
+      const context = canvas.getContext("2d");
+      const leftScoreOutput = document.querySelector("#left-score");
+      const rightScoreOutput = document.querySelector("#right-score");
+      const width = canvas.width;
+      const height = canvas.height;
+      const paddleHeight = 92;
+      const paddleWidth = 12;
+      const ballRadius = 9;
+      const keys = new Set();
+      const game = {
+        leftY: height / 2,
+        rightY: height / 2,
+        ballX: width / 2,
+        ballY: height / 2,
+        ballDX: 310,
+        ballDY: 180,
+        leftScore: 0,
+        rightScore: 0,
+        lastFrame: 0,
+      };
+
+      function resetBall(direction = 1) {
+        game.ballX = width / 2;
+        game.ballY = height / 2;
+        game.ballDX = 310 * direction;
+        game.ballDY = 180;
+      }
+
+      function resetMatch() {
+        game.leftScore = 0;
+        game.rightScore = 0;
+        game.leftY = height / 2;
+        game.rightY = height / 2;
+        resetBall();
+        updateScore();
+      }
+
+      function updateScore() {
+        leftScoreOutput.value = game.leftScore;
+        rightScoreOutput.value = game.rightScore;
+        leftScoreOutput.textContent = game.leftScore;
+        rightScoreOutput.textContent = game.rightScore;
+      }
+
+      function draw() {
+        context.fillStyle = "#27352d";
+        context.fillRect(0, 0, width, height);
+
+        context.strokeStyle = "#53645a";
+        context.lineWidth = 2;
+        context.setLineDash([9, 12]);
+        context.beginPath();
+        context.moveTo(width / 2, 0);
+        context.lineTo(width / 2, height);
+        context.stroke();
+        context.setLineDash([]);
+
+        context.fillStyle = "#d3f36b";
+        context.fillRect(32, game.leftY - paddleHeight / 2, paddleWidth, paddleHeight);
+        context.fillStyle = "#ff765e";
+        context.fillRect(width - 32 - paddleWidth, game.rightY - paddleHeight / 2, paddleWidth, paddleHeight);
+
+        context.fillStyle = "#f2f0df";
+        context.beginPath();
+        context.arc(game.ballX, game.ballY, ballRadius, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      function update(delta) {
+        const paddleSpeed = 450;
+        if (keys.has("w")) game.leftY -= paddleSpeed * delta;
+        if (keys.has("s")) game.leftY += paddleSpeed * delta;
+        if (keys.has("arrowup")) game.rightY -= paddleSpeed * delta;
+        if (keys.has("arrowdown")) game.rightY += paddleSpeed * delta;
+
+        const limit = paddleHeight / 2;
+        game.leftY = Math.max(limit, Math.min(height - limit, game.leftY));
+        game.rightY = Math.max(limit, Math.min(height - limit, game.rightY));
+
+        const oldX = game.ballX;
+        game.ballX += game.ballDX * delta;
+        game.ballY += game.ballDY * delta;
+
+        if (game.ballY - ballRadius < 0 || game.ballY + ballRadius > height) {
+          game.ballDY *= -1;
+          game.ballY = Math.max(ballRadius, Math.min(height - ballRadius, game.ballY));
+        }
+
+        const leftEdge = 32 + paddleWidth;
+        const rightEdge = width - 32 - paddleWidth;
+        if (game.ballDX < 0 && oldX - ballRadius >= leftEdge && game.ballX - ballRadius <= leftEdge
+          && Math.abs(game.ballY - game.leftY) <= limit + ballRadius) {
+          game.ballDX = Math.min(Math.abs(game.ballDX) + 12, 540);
+          game.ballDY += (game.ballY - game.leftY) * 5;
+        } else if (game.ballDX > 0 && oldX + ballRadius <= rightEdge && game.ballX + ballRadius >= rightEdge
+          && Math.abs(game.ballY - game.rightY) <= limit + ballRadius) {
+          game.ballDX = -Math.min(Math.abs(game.ballDX) + 12, 540);
+          game.ballDY += (game.ballY - game.rightY) * 5;
+        }
+
+        if (game.ballX < 0) {
+          game.rightScore += 1;
+          updateScore();
+          resetBall(-1);
+        } else if (game.ballX > width) {
+          game.leftScore += 1;
+          updateScore();
+          resetBall(1);
+        }
+      }
+
+      function frame(time) {
+        const delta = Math.min((time - game.lastFrame) / 1000 || 0, 0.03);
+        game.lastFrame = time;
+        update(delta);
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      function movePaddle(event) {
+        if (event.pointerType === "mouse" && event.buttons === 0) return;
+        const bounds = canvas.getBoundingClientRect();
+        const y = ((event.clientY - bounds.top) / bounds.height) * height;
+        const x = ((event.clientX - bounds.left) / bounds.width) * width;
+        if (x < width / 2) game.leftY = y;
+        else game.rightY = y;
+      }
+
+      window.addEventListener("keydown", (event) => {
+        const key = event.key.toLowerCase();
+        if (["arrowup", "arrowdown", "w", "s"].includes(key)) event.preventDefault();
+        keys.add(key);
+      });
+      window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
+      window.addEventListener("blur", () => keys.clear());
+      canvas.addEventListener("pointerdown", (event) => {
+        canvas.setPointerCapture(event.pointerId);
+        movePaddle(event);
+      });
+      canvas.addEventListener("pointermove", movePaddle);
+      document.querySelector("#reset").addEventListener("click", resetMatch);
+
+      updateScore();
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>
