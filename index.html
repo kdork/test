@@ -22,7 +22,8 @@
       * { box-sizing: border-box; }
 
       body {
-        min-height: 100vh;
+        height: 100vh;
+        height: 100svh;
         margin: 0;
         padding: 28px clamp(16px, 5vw, 72px) 24px;
         background-color: var(--ink);
@@ -33,6 +34,9 @@
       }
 
       main {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
         width: min(1120px, 100%);
         margin: 0 auto;
       }
@@ -97,6 +101,11 @@
       .player-labels span:last-child { color: var(--coral); }
 
       .court-wrap {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
         overflow: hidden;
         border: 1px solid #718076;
         background: #27352d;
@@ -106,7 +115,8 @@
       canvas {
         display: block;
         width: 100%;
-        aspect-ratio: 8 / 5;
+        height: 100%;
+        object-fit: contain;
         touch-action: none;
       }
 
@@ -148,6 +158,15 @@
         .bottomline { align-items: flex-start; padding: 12px 0; }
         .controls { gap: 8px 14px; }
         .control { gap: 5px; }
+      }
+
+      @media (max-height: 700px) {
+        body { padding-top: 12px; padding-bottom: 12px; }
+        .topline { min-height: 36px; padding-bottom: 8px; }
+        .scoreboard { margin-top: 12px; margin-bottom: 10px; }
+        .score { font-size: clamp(36px, 7vh, 60px); }
+        .player-labels { margin-bottom: 8px; }
+        .bottomline { min-height: 44px; }
       }
     </style>
   </head>
@@ -305,8 +324,13 @@
       function movePaddle(event) {
         if (event.pointerType === "mouse" && event.buttons === 0) return;
         const bounds = canvas.getBoundingClientRect();
-        const y = ((event.clientY - bounds.top) / bounds.height) * height;
-        const x = ((event.clientX - bounds.left) / bounds.width) * width;
+        const scale = Math.min(bounds.width / width, bounds.height / height);
+        const renderedWidth = width * scale;
+        const renderedHeight = height * scale;
+        const left = bounds.left + (bounds.width - renderedWidth) / 2;
+        const top = bounds.top + (bounds.height - renderedHeight) / 2;
+        const y = ((event.clientY - top) / renderedHeight) * height;
+        const x = ((event.clientX - left) / renderedWidth) * width;
         if (x < width / 2) game.leftY = y;
         else game.rightY = y;
       }
